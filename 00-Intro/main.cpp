@@ -38,6 +38,7 @@ WARNING: This one file example has a hell LOT of *sinful* programming practices
 #include <stdlib.h>
 
 #include <comdef.h>
+#include <vector>
 
 #define WINDOW_CLASS_NAME L"SampleWindow"
 #define WINDOW_TITLE L"00 - Intro"
@@ -71,6 +72,7 @@ int BackBufferHeight = 0;
 #define BRICK_HEIGHT 16.0f
 #define BRICK_SPEED 0.5f
 #define STEP_DISTANCE 20.0f
+#define enemySpeed 0.1f
 ID3D10Texture2D* texBrick = NULL;				// Texture object to store brick image
 ID3DX10Sprite* spriteObject = NULL;				// Sprite handling object 
 
@@ -79,6 +81,20 @@ D3DX10_SPRITE spriteBrick;
 float brick_x = BRICK_START_X;
 float brick_vx = BRICK_START_VX;
 float brick_y = BRICK_START_Y;
+
+struct Bullet {
+	float x, y;
+	bool active; 
+};
+std::vector<Bullet> bullets;
+
+struct Enemy {
+	float x;
+	float y;
+	bool active;
+};
+std::vector<Enemy> enemies;
+
 
 
 LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -108,6 +124,14 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if (brick_y > BackBufferHeight - BRICK_HEIGHT) 
 			brick_y = BackBufferHeight - BRICK_HEIGHT;
 		break;
+	case VK_SPACE :
+	{
+		Bullet newBullet;
+		newBullet.x = brick_x + BRICK_WIDTH / 2; 
+		newBullet.y = brick_y; 
+		newBullet.active = true; 
+		bullets.push_back(newBullet);
+	}
 		}
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
@@ -126,6 +150,37 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		vswprintf_s(s, fmt, argp);	\
 		va_end(argp);				\
 }		
+void SpawnEnemy() {
+	Enemy newEnemy;
+	newEnemy.x = BackBufferWidth;;
+	newEnemy.y = rand() % BackBufferHeight;
+	newEnemy.active = true; 
+	enemies.push_back(newEnemy); 
+}
+
+void UpdateEnemies(DWORD dt) {
+	for (auto& enemy : enemies) {
+		if (enemy.active) {
+			enemy.x -= enemySpeed * dt; // Di chuyển quái sang phải
+			if (enemy.x < 0) {
+				enemy.active = false; // Đánh dấu quái không còn hoạt động nếu ra khỏi màn hình
+			}
+		}
+	}
+}
+void RenderEnemies() {
+	for (const auto& enemy : enemies) {
+		if (enemy.active) {
+			D3DXMATRIX enemyTranslation;
+			D3DXMatrixTranslation(&enemyTranslation, enemy.x, (BackBufferHeight - enemy.y), 0.1f);
+			D3DXMATRIX enemyScaling;
+			D3DXMatrixScaling(&enemyScaling, BRICK_WIDTH, BRICK_HEIGHT, 1.0f); // Kích thước quái
+			spriteBrick.matWorld = (enemyScaling * enemyTranslation);
+			spriteObject->DrawSpritesImmediate(&spriteBrick, 1, 0, 0); // Vẽ quái
+		}
+	}
+}
+
 
 void DebugOut(const wchar_t* fmt, ...)
 {
@@ -363,12 +418,24 @@ void LoadResources()
 
 	IMPORTANT: no render-related code should be used inside this function.
 */
+DWORD lastSpawnTime = 0; // Thời gian của lần spawn cuối
+const DWORD spawnInterval = 2000;
 void Update(DWORD dt)
 {
-	//Uncomment the whole function to see the brick moves and bounces back when hitting left and right edges
-	//brick_x++;
-
-	
+	for (auto& bullet : bullets) {
+		if (bullet.active) {
+			bullet.x += 1.0f;
+			if (bullet.x < 0) {
+				bullet.active = false;
+		   }
+		}
+	}
+	lastSpawnTime += dt;
+	// Kiểm tra xem có nên spawn quái không
+	if (lastSpawnTime >= spawnInterval) {
+		SpawnEnemy();
+		lastSpawnTime = 0; // Reset thời gian
+	}
 
 	// NOTE: BackBufferWidth is indeed related to rendering!!
 	float right_edge = BackBufferWidth - BRICK_WIDTH;
@@ -378,16 +445,26 @@ void Update(DWORD dt)
 
 		brick_vx = -brick_vx;
 
-		//	//Why not having these logics would make the brick disappear sometimes?  
-		////	if (brick_x < 0)
-		////	{
-		////		brick_x = 0;
-		////	}
-		////	else if (brick_x > right_edge )
-		////	{
-		////		brick_x = right_edge;
-		////	}
+		
 	}
+	for (auto& enemy : enemies) {
+		if (enemy.active) {
+			for (auto& bullet : bullets) {
+				if (bullet.active) {
+					// Kiểm tra va chạm (giả sử quái và viên đạn đều là hình chữ nhật)
+					if (bullet.x < enemy.x + BRICK_WIDTH &&
+						bullet.x + 4.0f > enemy.x && // Kích thước viên đạn
+						bullet.y < enemy.y + BRICK_HEIGHT &&
+						bullet.y + 10.0f > enemy.y) { // Kích thước quái
+						// Nếu va chạm, đánh dấu quái và viên đạn là không hoạt động
+						enemy.active = false; // Quái biến mất
+						bullet.active = false; // Viên đạn biến mất
+					}
+				}
+			}
+		}
+	}
+	UpdateEnemies(dt);
 }
 
 /*
@@ -418,6 +495,18 @@ void Render()
 
 		spriteObject->DrawSpritesImmediate(&spriteBrick, 1, 0, 0);
 
+
+		for (const auto& bullet : bullets) {
+			if (bullet.active) {
+				D3DXMATRIX bulletTranslation;
+				D3DXMatrixTranslation(&bulletTranslation, bullet.x, (BackBufferHeight - bullet.y), 0.1f);
+				D3DXMATRIX bulletScaling;
+				D3DXMatrixScaling(&bulletScaling, 4.0f, 10.0f, 1.0f); // Kích thước viên đạn
+				spriteBrick.matWorld = (bulletScaling * bulletTranslation);
+				spriteObject->DrawSpritesImmediate(&spriteBrick, 1, 0, 0);
+			}
+		}
+		RenderEnemies();
 		// Finish up and send the sprites to the hardware
 		spriteObject->End();
 

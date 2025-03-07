@@ -72,7 +72,7 @@ int BackBufferHeight = 0;
 #define BRICK_HEIGHT 16.0f
 #define BRICK_SPEED 0.5f
 #define STEP_DISTANCE 20.0f
-#define enemySpeed 0.1f
+#define enemySpeed 0.07f
 ID3D10Texture2D* texBrick = NULL;				// Texture object to store brick image
 ID3DX10Sprite* spriteObject = NULL;				// Sprite handling object 
 

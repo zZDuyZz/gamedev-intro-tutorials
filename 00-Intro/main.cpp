@@ -1,4 +1,4 @@
-/* =============================================================
+﻿/* =============================================================
 INTRODUCTION TO GAME PROGRAMMING SE102
 
 SAMPLE 00 - INTRODUCTORY CODE
@@ -65,11 +65,12 @@ int BackBufferHeight = 0;
 #define BRICK_START_Y 200.0f
 
 #define BRICK_START_VX 0.2f
+#define BRICK_STAR_VY 0.2f
 
 #define BRICK_WIDTH 16.0f
 #define BRICK_HEIGHT 16.0f
-
-
+#define BRICK_SPEED 0.5f
+#define STEP_DISTANCE 20.0f
 ID3D10Texture2D* texBrick = NULL;				// Texture object to store brick image
 ID3DX10Sprite* spriteObject = NULL;				// Sprite handling object 
 
@@ -86,6 +87,28 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
+	case WM_KEYDOWN:
+		switch (wParam)
+		{
+		case 'A': // Di chuyển sang trái
+		brick_x -= STEP_DISTANCE;
+		if (brick_x < 0) brick_x = 0;
+		break;
+	case 'D': // Di chuyển sang phải
+		brick_x += STEP_DISTANCE;
+		if (brick_x > BackBufferWidth - BRICK_WIDTH) 
+			brick_x = BackBufferWidth - BRICK_WIDTH;
+		break;
+	case 'W': // Di chuyển lên
+		brick_y -= STEP_DISTANCE;
+		if (brick_y < 0) brick_y = 0;
+		break;
+	case 'S': // Di chuyển xuống
+		brick_y += STEP_DISTANCE;
+		if (brick_y > BackBufferHeight - BRICK_HEIGHT) 
+			brick_y = BackBufferHeight - BRICK_HEIGHT;
+		break;
+		}
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -313,7 +336,7 @@ void LoadResources()
 
 	pD3DDevice->CreateShaderResourceView(texBrick, &SRVDesc, &gSpriteTextureRV);
 
-	// Set the sprite�s shader resource view
+	// Set the sprite’s shader resource view
 	spriteBrick.pTexture = gSpriteTextureRV;
 
 	// top-left location in U,V coords
@@ -345,10 +368,11 @@ void Update(DWORD dt)
 	//Uncomment the whole function to see the brick moves and bounces back when hitting left and right edges
 	//brick_x++;
 
-	brick_x += brick_vx*dt; 
+	
 
 	// NOTE: BackBufferWidth is indeed related to rendering!!
 	float right_edge = BackBufferWidth - BRICK_WIDTH;
+	
 
 	if (brick_x < 0 || brick_x > right_edge) {
 
@@ -389,7 +413,7 @@ void Render()
 		D3DXMATRIX matScaling;
 		D3DXMatrixScaling(&matScaling, BRICK_WIDTH, BRICK_HEIGHT, 1.0f);
 
-		// Setting the sprite�s position and size
+		// Setting the sprite’s position and size
 		spriteBrick.matWorld = (matScaling * matTranslation);
 
 		spriteObject->DrawSpritesImmediate(&spriteBrick, 1, 0, 0);

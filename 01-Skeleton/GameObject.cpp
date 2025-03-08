@@ -30,6 +30,7 @@ CGameObject::~CGameObject()
 void CMario::Update(DWORD dt)
 {
 	x += vx*dt;
+	y += vy * dt;
 
 	int BackBufferWidth = CGame::GetInstance()->GetBackBufferWidth();
 	if (x <= 0 || x >= BackBufferWidth - MARIO_WIDTH) {

@@ -45,4 +45,18 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Sprite\NES - Battle City JPN - General Sprites (1).png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Sprite\NES - Battle City JPN - General Sprites (2).png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Sprite\NES - Battle City JPN - General Sprites (3).png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Sprite\NES - Battle City JPN - General Sprites.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

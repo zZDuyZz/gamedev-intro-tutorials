@@ -118,6 +118,9 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="brick.ico" />
+    <Image Include="Sprite\D-sprite.png" />
+    <Image Include="Sprite\R-sprite.png" />
+    <Image Include="Sprite\t-sprite.png" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
